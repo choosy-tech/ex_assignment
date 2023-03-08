@@ -1,0 +1,8 @@
+<.header>
+  New Todo
+  <:subtitle>Use this form to manage todo records in your database.</:subtitle>
+</.header>
+
+<.todo_form changeset={@changeset} action={~p"/todos"} />
+
+<.back navigate={~p"/todos"}>Back to todos</.back>
