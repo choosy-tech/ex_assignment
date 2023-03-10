@@ -7,6 +7,7 @@ defmodule ExAssignment.Todos do
   alias ExAssignment.Repo
 
   alias ExAssignment.Todos.Todo
+  alias ExAssignment.RecommendationServer, as: Cache
 
   @doc """
   Returns the list of todos, optionally filtered by the given type.
@@ -42,15 +43,30 @@ defmodule ExAssignment.Todos do
   @doc """
   Returns the next todo that is recommended to be done by the system.
 
+  Cache a generated recommendation and invalidate after it is marked as complete.
+
   ASSIGNMENT: ...
   """
+
   def get_recommended() do
+    Cache.get_recommendation() |> get_recommended()
+  end
+
+  def get_recommended(todo) when is_nil(todo) do
     list_todos(:open)
     |> case do
-      [] -> nil
-      todos -> Enum.take_random(todos, 1) |> List.first()
+      [] ->
+        nil
+
+      todos ->
+        recommendation = Enum.take_random(todos, 1) |> List.first()
+
+        :ok = Cache.set_recommendation(recommendation)
+        recommendation
     end
   end
+
+  def get_recommended(todo), do: todo
 
   @doc """
   Gets a single todo.
@@ -117,7 +133,15 @@ defmodule ExAssignment.Todos do
 
   """
   def delete_todo(%Todo{} = todo) do
-    Repo.delete(todo)
+    response = Repo.delete(todo)
+
+    cached = Cache.get_recommendation()
+
+    if present?(cached, todo) do
+      Cache.invalidate_recommendation()
+    end
+
+    response
   end
 
   @doc """
@@ -143,11 +167,21 @@ defmodule ExAssignment.Todos do
 
   """
   def check(id) do
-    {_, _} =
-      from(t in Todo, where: t.id == ^id, update: [set: [done: true]])
-      |> Repo.update_all([])
+    get_todo!(id)
+    |> update_todo(%{done: true})
+    |> case do
+      {:ok, todo} ->
+        cached = Cache.get_recommendation()
 
-    :ok
+        if present?(cached, todo) do
+          Cache.invalidate_recommendation()
+        end
+
+        :ok
+
+      e ->
+        e
+    end
   end
 
   @doc """
@@ -160,10 +194,20 @@ defmodule ExAssignment.Todos do
 
   """
   def uncheck(id) do
-    {_, _} =
-      from(t in Todo, where: t.id == ^id, update: [set: [done: false]])
-      |> Repo.update_all([])
+    get_todo!(id)
+    |> update_todo(%{done: false})
+    |> case do
+      {:ok, _} ->
+        :ok
 
-    :ok
+      e ->
+        e
+    end
+  end
+
+  defp present?(nil, _todo), do: false
+
+  defp present?(cached_todo, todo) do
+    cached_todo.id == todo.id
   end
 end
