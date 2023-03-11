@@ -1,5 +1,5 @@
 defmodule ExAssignment.TodosTest do
-  use ExAssignment.DataCase
+  use ExAssignment.DataCase, async: true
 
   alias ExAssignment.Todos
 

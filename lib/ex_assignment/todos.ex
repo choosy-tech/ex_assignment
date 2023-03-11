@@ -23,20 +23,21 @@ defmodule ExAssignment.Todos do
       [%Todo{}, ...]
 
   """
-  def list_todos(type \\ nil) do
-    cond do
-      type == :open ->
-        from(t in Todo, where: not t.done, order_by: t.priority)
-        |> Repo.all()
+  @spec list_todos(type :: atom()) :: [Todo.t()] | []
+  def list_todos(:open) do
+    from(t in Todo, where: not t.done, order_by: t.priority)
+    |> Repo.all()
+  end
 
-      type == :done ->
-        from(t in Todo, where: t.done, order_by: t.priority)
-        |> Repo.all()
+  def list_todos(:done) do
+    from(t in Todo, where: t.done, order_by: t.priority)
+    |> Repo.all()
+  end
 
-      true ->
-        from(t in Todo, order_by: t.priority)
-        |> Repo.all()
-    end
+  @spec list_todos() :: [Todo.t()] | []
+  def list_todos do
+    from(t in Todo, order_by: t.priority)
+    |> Repo.all()
   end
 
   @doc """
@@ -44,7 +45,8 @@ defmodule ExAssignment.Todos do
 
   ASSIGNMENT: ...
   """
-  def get_recommended() do
+  @spec get_recommended() :: Todo.t() | nil
+  def get_recommended do
     list_todos(:open)
     |> case do
       [] -> nil
@@ -66,6 +68,7 @@ defmodule ExAssignment.Todos do
       ** (Ecto.NoResultsError)
 
   """
+  @spec get_todo!(id :: integer()) :: Todo.t() | no_return()
   def get_todo!(id), do: Repo.get!(Todo, id)
 
   @doc """
@@ -80,6 +83,7 @@ defmodule ExAssignment.Todos do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec create_todo(attrs :: map()) :: {:ok, Todo.t()} | {:error, Ecto.Changeset.t()}
   def create_todo(attrs \\ %{}) do
     %Todo{}
     |> Todo.changeset(attrs)
@@ -98,6 +102,8 @@ defmodule ExAssignment.Todos do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_todo(todo :: Todo.t(), attrs :: map()) ::
+          {:ok, Todo.t()} | {:error, Ecto.Changeset.t()}
   def update_todo(%Todo{} = todo, attrs) do
     todo
     |> Todo.changeset(attrs)
@@ -116,6 +122,7 @@ defmodule ExAssignment.Todos do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec delete_todo(todo :: Todo.t()) :: {:ok, Todo.t()} | {:error, Ecto.Changeset.t()}
   def delete_todo(%Todo{} = todo) do
     Repo.delete(todo)
   end
@@ -129,6 +136,7 @@ defmodule ExAssignment.Todos do
       %Ecto.Changeset{data: %Todo{}}
 
   """
+  @spec change_todo(todo :: Todo.t(), attrs :: map()) :: Ecto.Changeset.t()
   def change_todo(%Todo{} = todo, attrs \\ %{}) do
     Todo.changeset(todo, attrs)
   end
@@ -142,10 +150,9 @@ defmodule ExAssignment.Todos do
       :ok
 
   """
+  @spec check(id :: integer()) :: :ok
   def check(id) do
-    {_, _} =
-      from(t in Todo, where: t.id == ^id, update: [set: [done: true]])
-      |> Repo.update_all([])
+    {_, _} = update_todo_state(id, true)
 
     :ok
   end
@@ -159,11 +166,17 @@ defmodule ExAssignment.Todos do
       :ok
 
   """
+  @spec uncheck(id :: integer()) :: :ok
   def uncheck(id) do
-    {_, _} =
-      from(t in Todo, where: t.id == ^id, update: [set: [done: false]])
-      |> Repo.update_all([])
+    {_, _} = update_todo_state(id, false)
 
     :ok
+  end
+
+  @spec update_todo_state(todo_id :: integer(), done? :: boolean()) ::
+          {qty_of_todos_updated :: non_neg_integer(), result :: nil | [term()]}
+  defp update_todo_state(todo_id, done?) do
+    from(t in Todo, where: t.id == ^todo_id, update: [set: [done: ^done?]])
+    |> Repo.update_all([])
   end
 end
