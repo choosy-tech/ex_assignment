@@ -160,12 +160,7 @@ defmodule ExAssignmentWeb.CoreComponents do
         <%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%= msg %></p>
-      <button
-        :if={@close}
-        type="button"
-        class="group absolute top-2 right-1 p-2"
-        aria-label="close"
-      >
+      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label="close">
         <.icon name="hero-x-mark-solid" class="w-5 h-5 opacity-40 group-hover:opacity-70" />
       </button>
     </div>

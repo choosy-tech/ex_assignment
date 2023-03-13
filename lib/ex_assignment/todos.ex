@@ -4,9 +4,10 @@ defmodule ExAssignment.Todos do
   """
 
   import Ecto.Query, warn: false
-  alias ExAssignment.Repo
 
+  alias ExAssignment.Repo
   alias ExAssignment.Todos.Todo
+  alias ExAssignment.Queries.Todos
 
   @doc """
   Returns the list of todos, optionally filtered by the given type.
@@ -23,20 +24,24 @@ defmodule ExAssignment.Todos do
       [%Todo{}, ...]
 
   """
-  def list_todos(type \\ nil) do
-    cond do
-      type == :open ->
-        from(t in Todo, where: not t.done, order_by: t.priority)
-        |> Repo.all()
+  @spec list_todos(type :: nil | :done | :open, query :: Ecto.Queryable.t()) :: [Todo.t()]
+  def list_todos(type \\ nil, query \\ Todos.new())
 
-      type == :done ->
-        from(t in Todo, where: t.done, order_by: t.priority)
-        |> Repo.all()
+  def list_todos(:done, query) do
+    query
+    |> Todos.completed()
+    |> Repo.all()
+  end
 
-      true ->
-        from(t in Todo, order_by: t.priority)
-        |> Repo.all()
-    end
+  def list_todos(:open, query) do
+    query
+    |> Todos.not_completed()
+    |> Repo.all()
+  end
+
+  def list_todos(_type, query) do
+    query
+    |> Repo.all()
   end
 
   @doc """

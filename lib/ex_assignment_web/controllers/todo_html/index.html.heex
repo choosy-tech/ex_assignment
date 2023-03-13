@@ -8,102 +8,105 @@
 </header>
 
 <%= if @recommended_todo != nil do %>
-<div class="mt-16">
-  <h2 class="text-lg mb-4">What should I do next?</h2>
-  <div class="p-4 shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
-    >
-    <div class="flex justify-between items-center">
-      <div class="flex gap-4 items-center">
-        <div>
-          <.button
-            data-method="put"
-            data-to={~p"/todos/#{@recommended_todo}/check"}
-            data-csrf={get_csrf_token()}
-            class="!bg-green-600 hover:!bg-green-400"
-          >
-            <.icon name="hero-check" />
-          </.button>
-        </div>
-        <span><%= @recommended_todo.title %></span>
-        <.todo_prio value={@recommended_todo.priority} />
-      </div>
-      <div class="flex gap-4">
-        <.link href={~p"/todos/#{@recommended_todo}"} method="delete" data-confirm="Are you sure?">
-          <.icon name="hero-trash" />
-        </.link>
-      </div>
-    </div>
-  </div>
-</div>
-<% end %>
-
-<div class="mt-16">
-  <h2 class="text-lg mb-4">Open</h2>
-  <%= if length(@open_todos) > 0 do %>
-  <ul class="flex flex-col items-stretch gap-4 py-4 sm:gap-8">
-    <li
-      :for={todo <- @open_todos}
-      class="p-4 shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
-    >
+  <div class="mt-16">
+    <h2 class="text-lg mb-4">What should I do next?</h2>
+    <div class="p-4 shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300">
       <div class="flex justify-between items-center">
         <div class="flex gap-4 items-center">
           <div>
             <.button
               data-method="put"
-              data-to={~p"/todos/#{todo.id}/check"}
+              data-to={~p"/todos/#{@recommended_todo}/check"}
               data-csrf={get_csrf_token()}
               class="!bg-green-600 hover:!bg-green-400"
             >
               <.icon name="hero-check" />
             </.button>
           </div>
-          <span><%= todo.title %></span>
-          <.todo_prio value={todo.priority} />
+          <span><%= @recommended_todo.title %></span>
+          <.todo_prio value={@recommended_todo.priority} />
         </div>
         <div class="flex gap-4">
-          <.link href={~p"/todos/#{todo}"} method="delete" data-confirm="Are you sure?">
+          <.link
+            href={~p"/todos/#{@recommended_todo}"}
+            method="delete"
+            data-confirm="Are you sure?"
+          >
             <.icon name="hero-trash" />
           </.link>
         </div>
       </div>
-    </li>
-  </ul>
+    </div>
+  </div>
+<% end %>
+
+<div class="mt-16">
+  <h2 class="text-lg mb-4">Open</h2>
+  <%= if length(@open_todos) > 0 do %>
+    <ul class="flex flex-col items-stretch gap-4 py-4 sm:gap-8">
+      <li
+        :for={todo <- @open_todos}
+        class="p-4 shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
+      >
+        <div class="flex justify-between items-center">
+          <div class="flex gap-4 items-center">
+            <div>
+              <.button
+                data-method="put"
+                data-to={~p"/todos/#{todo.id}/check"}
+                data-csrf={get_csrf_token()}
+                class="!bg-green-600 hover:!bg-green-400"
+              >
+                <.icon name="hero-check" />
+              </.button>
+            </div>
+            <span><%= todo.title %></span>
+            <.todo_prio value={todo.priority} />
+          </div>
+          <div class="flex gap-4">
+            <.link href={~p"/todos/#{todo}"} method="delete" data-confirm="Are you sure?">
+              <.icon name="hero-trash" />
+            </.link>
+          </div>
+        </div>
+      </li>
+    </ul>
   <% else %>
-  <div>Nothing to do</div>
+    <div>Nothing to do</div>
   <% end %>
 </div>
 
 <div class="mt-16">
   <h2 class="text-lg mb-4">Completed</h2>
   <%= if length(@done_todos) > 0 do %>
-  <ul class="flex flex-col items-stretch gap-4 py-4 sm:gap-8">
-    <li
-      :for={todo <- @done_todos}
-      class="p-4 shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
-    >
-      <div class="flex justify-between items-center">
-        <div class="flex gap-4 items-center">
-          <div>
-            <.button
-              data-method="put"
-              data-to={~p"/todos/#{todo.id}/uncheck"}
-              data-csrf={get_csrf_token()}
-              class="!bg-blue-600 hover:!bg-blue-400"
-            >
-              <.icon name="hero-arrow-uturn-left" />
-            </.button>
+    <ul class="flex flex-col items-stretch gap-4 py-4 sm:gap-8">
+      <li
+        :for={todo <- @done_todos}
+        class="p-4 shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
+      >
+        <div class="flex justify-between items-center">
+          <div class="flex gap-4 items-center">
+            <div>
+              <.button
+                data-method="put"
+                data-to={~p"/todos/#{todo.id}/uncheck"}
+                data-csrf={get_csrf_token()}
+                class="!bg-blue-600 hover:!bg-blue-400"
+              >
+                <.icon name="hero-arrow-uturn-left" />
+              </.button>
+            </div>
+            <%= todo.title %>
           </div>
-          <%= todo.title %>
+          <div class="flex gap-4">
+            <.link href={~p"/todos/#{todo}"} method="delete" data-confirm="Are you sure?">
+              <.icon name="hero-trash" />
+            </.link>
+          </div>
         </div>
-        <div class="flex gap-4">
-          <.link href={~p"/todos/#{todo}"} method="delete" data-confirm="Are you sure?">
-            <.icon name="hero-trash" />
-          </.link>
-        </div>
-      </div>
-    </li>
-  </ul>
+      </li>
+    </ul>
   <% else %>
-  <div>Nothing completed yet</div>
+    <div>Nothing completed yet</div>
   <% end %>
 </div>
