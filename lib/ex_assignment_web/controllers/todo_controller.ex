@@ -5,9 +5,9 @@ defmodule ExAssignmentWeb.TodoController do
   alias ExAssignment.Todos.Todo
 
   def index(conn, _params) do
-    open_todos = Todos.list_todos(:open) |> IO.inspect(label: "Open")
-    done_todos = Todos.list_todos(:done) |> IO.inspect(label: "Done")
-    recommended_todo = Todos.get_recommended() |> IO.inspect(label: "Recomended")
+    open_todos = Todos.list_todos(:open)
+    done_todos = Todos.list_todos(:done)
+    recommended_todo = Todos.get_recommended()
 
     render(conn, :index,
       open_todos: open_todos,
