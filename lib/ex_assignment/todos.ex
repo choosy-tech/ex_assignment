@@ -48,8 +48,32 @@ defmodule ExAssignment.Todos do
     list_todos(:open)
     |> case do
       [] -> nil
-      todos -> Enum.take_random(todos, 1) |> List.first()
+      todo_list ->
+        sorted_by_probability =
+          todo_list
+          |> calculate_probability()
+          |> List.first()
+
+      Enum.find(todo_list, &(&1.id == sorted_by_probability.id))
     end
+  end
+
+  # Calculate probablities for all todos
+  def calculate_probability(todo_list) do
+    todo_list
+    |> Enum.map(fn todo ->
+      %{id: todo.id, probablity: probability(todo, todo_list)}
+    end)
+  end
+
+  # Count the probability of a todo item
+  def probability(todo, todos) do
+    urgency_score(todo) / Enum.reduce(todos, 0, fn t, acc -> acc + urgency_score(t) end)
+  end
+
+  # Calculate the urgency score of a todo item
+  defp urgency_score(todo) do
+    1 / todo.priority
   end
 
   @doc """
