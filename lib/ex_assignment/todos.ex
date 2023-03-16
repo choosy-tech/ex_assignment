@@ -5,6 +5,7 @@ defmodule ExAssignment.Todos do
 
   import Ecto.Query, warn: false
   alias ExAssignment.Repo
+  alias ExAssignment.Helpers
 
   alias ExAssignment.Todos.Todo
 
@@ -44,12 +45,24 @@ defmodule ExAssignment.Todos do
 
   ASSIGNMENT: ...
   """
-  def get_recommended() do
-    list_todos(:open)
-    |> case do
-      [] -> nil
-      todos -> Enum.take_random(todos, 1) |> List.first()
-    end
+  def recommended(todos) do
+    [%Todo{} | _] = todos
+
+    {priorities, max_priority} =
+      Enum.map_reduce(todos, 0, fn todo, acc ->
+        {
+          todo.priority,
+          if(todo.priority > acc, do: todo.priority, else: acc)
+        }
+      end)
+
+    lcm = Helpers.least_common_multiple(priorities, max_priority)
+
+    todos
+    |> Enum.flat_map(fn todo ->
+      List.duplicate(todo, div(lcm, todo.priority))
+    end)
+    |> Enum.random()
   end
 
   @doc """

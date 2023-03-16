@@ -7,7 +7,7 @@ defmodule ExAssignmentWeb.TodoController do
   def index(conn, _params) do
     open_todos = Todos.list_todos(:open)
     done_todos = Todos.list_todos(:done)
-    recommended_todo = Todos.get_recommended()
+    recommended_todo = Todos.recommended(open_todos)
 
     render(conn, :index,
       open_todos: open_todos,
