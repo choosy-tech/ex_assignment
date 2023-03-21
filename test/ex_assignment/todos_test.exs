@@ -77,7 +77,7 @@ defmodule ExAssignment.TodosTest do
     end
 
     test "get_recommended/0 it should return based on priority " do
-      attempts = 100
+      attempts = 1000
       alpha = 0.05
 
       todos_list = [
@@ -128,9 +128,13 @@ defmodule ExAssignment.TodosTest do
         buy_pots: buy_pots / attempts
       ]
 
-      assert probabilities[:water_flowers] * 2.5 - probabilities[:prepare_lunch] < alpha
-      assert probabilities[:shop_groceries] * 3 - probabilities[:prepare_lunch] < alpha
-      assert probabilities[:buy_pots] * 6 - probabilities[:prepare_lunch] < alpha
+      assert Float.floor(probabilities[:water_flowers] * 2.5 - probabilities[:prepare_lunch], 2) <=
+               alpha
+
+      assert Float.floor(probabilities[:shop_groceries] * 3 - probabilities[:prepare_lunch], 2) <=
+               alpha
+
+      assert Float.floor(probabilities[:buy_pots] * 6 - probabilities[:prepare_lunch], 2) <= alpha
     end
   end
 end

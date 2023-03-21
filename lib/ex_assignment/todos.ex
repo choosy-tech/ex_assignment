@@ -39,22 +39,6 @@ defmodule ExAssignment.Todos do
     end
   end
 
-  defp sum_priorities(type) do
-    cond do
-      type == :open ->
-        from(t in Todo, where: not t.done, order_by: t.priority, select: sum(t.priority))
-        |> Repo.one()
-
-      type == :done ->
-        from(t in Todo, where: t.done, order_by: t.priority, select: sum(t.priority))
-        |> Repo.one()
-
-      true ->
-        from(t in Todo, order_by: t.priority, select: sum(t.priority))
-        |> Repo.one()
-    end
-  end
-
   @doc """
   Returns the next todo that is recommended to be done by the system.
 
@@ -67,24 +51,29 @@ defmodule ExAssignment.Todos do
         nil
 
       todos ->
-        total_probability = sum_priorities(:open)
-        choice = :rand.uniform(total_probability)
+        priorities_inverted =
+          for t <- todos do
+            Map.put_new(t, :inverse_priority, 1.00 / t.priority)
+          end
 
-        result =
-          Enum.reduce(todos, %{sum: 0, todo: nil}, fn t, acc ->
-            cond do
-              total_probability == t.priority ->
-                %{sum: acc.sum + t.priority, todo: t}
+        sum_priorities =
+          Enum.reduce(priorities_inverted, 0, fn x, acc -> acc + x.inverse_priority end)
 
-              acc.sum + (total_probability - t.priority) >= choice && acc.todo == nil ->
-                %{sum: acc.sum + t.priority, todo: t}
+        priorities =
+          for p <- priorities_inverted do
+            Map.put_new(p, :normalized_priority, p.inverse_priority / sum_priorities)
+          end
 
-              true ->
-                %{sum: acc.sum + t.priority, todo: acc.todo}
-            end
-          end)
+        choice = :rand.uniform()
 
-        result.todo
+        Enum.reduce(priorities, {nil, 0}, fn x, {current, acc} ->
+          if acc + x.normalized_priority >= choice && choice >= acc && current == nil do
+            {x, acc + x.normalized_priority}
+          else
+            {current, acc + x.normalized_priority}
+          end
+        end)
+        |> elem(0)
     end
   end
 
