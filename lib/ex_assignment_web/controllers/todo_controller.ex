@@ -49,6 +49,8 @@ defmodule ExAssignmentWeb.TodoController do
 
     case Todos.update_todo(todo, todo_params) do
       {:ok, todo} ->
+        IO.inspect(todo_params)
+
         conn
         |> put_flash(:info, "Todo updated successfully.")
         |> redirect(to: ~p"/todos/#{todo}")
