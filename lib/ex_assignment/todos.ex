@@ -39,6 +39,22 @@ defmodule ExAssignment.Todos do
     end
   end
 
+  defp sum_priorities(type) do
+    cond do
+      type == :open ->
+        from(t in Todo, where: not t.done, order_by: t.priority, select: sum(t.priority))
+        |> Repo.one()
+
+      type == :done ->
+        from(t in Todo, where: t.done, order_by: t.priority, select: sum(t.priority))
+        |> Repo.one()
+
+      true ->
+        from(t in Todo, order_by: t.priority, select: sum(t.priority))
+        |> Repo.one()
+    end
+  end
+
   @doc """
   Returns the next todo that is recommended to be done by the system.
 
@@ -47,8 +63,28 @@ defmodule ExAssignment.Todos do
   def get_recommended() do
     list_todos(:open)
     |> case do
-      [] -> nil
-      todos -> Enum.take_random(todos, 1) |> List.first()
+      [] ->
+        nil
+
+      todos ->
+        total_probability = sum_priorities(:open)
+        choice = :rand.uniform(total_probability)
+
+        result =
+          Enum.reduce(todos, %{sum: 0, todo: nil}, fn t, acc ->
+            cond do
+              total_probability == t.priority ->
+                %{sum: acc.sum + t.priority, todo: t}
+
+              acc.sum + (total_probability - t.priority) >= choice && acc.todo == nil ->
+                %{sum: acc.sum + t.priority, todo: t}
+
+              true ->
+                %{sum: acc.sum + t.priority, todo: acc.todo}
+            end
+          end)
+
+        result.todo
     end
   end
 

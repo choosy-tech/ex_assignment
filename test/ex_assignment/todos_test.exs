@@ -55,9 +55,82 @@ defmodule ExAssignment.TodosTest do
       assert_raise Ecto.NoResultsError, fn -> Todos.get_todo!(todo.id) end
     end
 
-    test "change_todo/1 returns a todo changeset" do
-      todo = todo_fixture()
-      assert %Ecto.Changeset{} = Todos.change_todo(todo)
+    test "get_recommended/0 returns a recommended todo" do
+      Enum.each(
+        [
+          %{
+            done: false,
+            priority: 20,
+            title: "Prepare Lunch"
+          }
+        ],
+        fn t ->
+          todo_fixture(t)
+        end
+      )
+
+      assert %{
+               done: false,
+               priority: 20,
+               title: "Prepare Lunch"
+             } = Todos.get_recommended()
+    end
+
+    test "get_recommended/0 it should return based on priority " do
+      attempts = 100
+      alpha = 0.05
+
+      todos_list = [
+        %{
+          done: false,
+          priority: 20,
+          title: "Prepare Lunch"
+        },
+        %{
+          done: false,
+          priority: 50,
+          title: "Water flowers"
+        },
+        %{
+          done: false,
+          priority: 60,
+          title: "Shop groceries"
+        },
+        %{
+          done: false,
+          priority: 130,
+          title: "Buy new flower pots"
+        }
+      ]
+
+      Enum.each(
+        todos_list,
+        fn t ->
+          todo_fixture(t)
+        end
+      )
+
+      [prepare_lunch, water_flowers, shop_groceries, buy_pots] =
+        for todo <- todos_list do
+          Enum.reduce(1..attempts, 0, fn _, acc ->
+            if todo.title == Todos.get_recommended().title do
+              acc + 1
+            else
+              acc
+            end
+          end)
+        end
+
+      probabilities = [
+        prepare_lunch: prepare_lunch / attempts,
+        water_flowers: water_flowers / attempts,
+        shop_groceries: shop_groceries / attempts,
+        buy_pots: buy_pots / attempts
+      ]
+
+      assert probabilities[:water_flowers] * 2.5 - probabilities[:prepare_lunch] < alpha
+      assert probabilities[:shop_groceries] * 3 - probabilities[:prepare_lunch] < alpha
+      assert probabilities[:buy_pots] * 6 - probabilities[:prepare_lunch] < alpha
     end
   end
 end
