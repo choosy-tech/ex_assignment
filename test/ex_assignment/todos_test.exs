@@ -77,7 +77,7 @@ defmodule ExAssignment.TodosTest do
     end
 
     test "get_recommended/0 it should return based on priority " do
-      attempts = 1000
+      attempts = 10000
       alpha = 0.05
 
       todos_list = [
