@@ -47,8 +47,26 @@ defmodule ExAssignment.Todos do
   def get_recommended() do
     list_todos(:open)
     |> case do
-      [] -> nil
-      todos -> Enum.take_random(todos, 1) |> List.first()
+      [] ->
+        nil
+
+      todos ->
+        priorities =
+          todos
+          |> Enum.map(& &1.priority)
+
+        max_priority = Enum.max(priorities)
+
+        importance = priorities |> Enum.map(fn priority -> max_priority / priority end)
+        importance_sum = importance |> Enum.sum()
+
+        percentages_to_be_picked =
+          importance |> Enum.map(fn i -> (100 * i / importance_sum) |> round end)
+
+        todos
+        |> Enum.zip(percentages_to_be_picked)
+        |> Enum.flat_map(fn {todo, n} -> List.duplicate(todo, n) end)
+        |> Enum.random()
     end
   end
 
